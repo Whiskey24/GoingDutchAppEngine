@@ -13,3 +13,5 @@ clover.xml
 
 ## Directory-based project format:
 .idea/
+
+app.yaml
