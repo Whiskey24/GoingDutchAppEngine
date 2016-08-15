@@ -14,7 +14,7 @@ $app = new \Slim\App();
 $auth = new \Middleware\Authenticate();
 
 global $app_config;
-$app_config = parse_ini_file('config.ini', true);
+$app_config = parse_ini_file('../config.ini', true);
 
 $app->get('/version', function ($request, $response, $args) {
     $id = array('service' => 'Going Dutch API', 'version' =>'0.1', 'uid' => \Middleware\Authenticate::$requestUid);
