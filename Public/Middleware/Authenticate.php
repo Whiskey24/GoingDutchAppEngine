@@ -28,8 +28,13 @@ class Authenticate
         $name = '';
         $pass = '';
 
-        // first check header
-        if ($request->hasHeader('PHP_AUTH_USER')) {
+        // check for HTTP_AUTHORIZATION (GAE)
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            list($name, $pass) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
+        }
+
+        // then check header
+        else if ($request->hasHeader('PHP_AUTH_USER')) {
             $name = $request->getHeader('PHP_AUTH_USER')[0];
             $pass = $request->getHeader('PHP_AUTH_PW')[0];
         }
@@ -38,6 +43,8 @@ class Authenticate
         else if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
             list($name, $pass) = explode(':', base64_decode(substr($_SERVER['REDIRECT_HTTP_AUTHORIZATION'], 6)));
         }
+
+        error_log("Name = {$name}, Pass = {$pass}", 0);
 
         // validate the credentials
         if (!empty($name) && !empty($pass) && $pass !== 0) {
