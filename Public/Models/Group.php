@@ -630,13 +630,14 @@ class Group
         );
         $gid = Db::getInstance()->lastInsertId();
 
-        $sql = "INSERT INTO users_groups (user_id, group_id, role_id, join_date)
-                VALUES (:user_id, :group_id, :role_id, FROM_UNIXTIME(:submitted))";
+        $sql = "INSERT INTO users_groups (user_id, group_id, sort, role_id, join_date)
+                VALUES (:user_id, :group_id, :sort, :role_id, FROM_UNIXTIME(:submitted))";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
                 ':user_id' => $uid,
                 ':group_id' => $gid,
+                ':sort' => 0,
                 ':role_id' => 0,
                 ':submitted' => time()
             )
