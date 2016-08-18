@@ -95,6 +95,7 @@ class Group
         $sql = "INSERT INTO expenses (type, cid, user_id, group_id, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset)
                 VALUES (:type, :cid, :user_id, :group_id, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset)";
         $stmt = Db::getInstance()->prepare($sql);
+
         $stmt->execute(
             array(
                 ':type' => $expense['type'],
@@ -181,10 +182,11 @@ class Group
         if (!isset($expense['type']))
             $expense['type'] = 1;
 
-        $sql = "UPDATE expenses SET type=:type, cid=:cid, user_id=:user_id, description=:description, amount=:amount, event_id=:event_id, timestamp=:updated,
+        $sql = "UPDATE expenses SET type=:type, cid=:cid, user_id=:user_id, description=:description, amount=:amount, event_id=:event_id,
                 currency=:currency, timezoneoffset=:timezoneoffset, expense_date=FROM_UNIXTIME(:created), timestamp=FROM_UNIXTIME(:updated)
                 WHERE expense_id=:eid AND group_id=:group_id";
         $stmt = Db::getInstance()->prepare($sql);
+
         $stmt->execute(
             array(
                 ':type' => $expense['type'],
