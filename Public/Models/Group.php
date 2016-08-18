@@ -84,29 +84,29 @@ class Group
 
     function addExpense($gid, $expense)
     {
-        $uids = $expense->uids . ',' . $expense->uid;
+        $uids = $expense['uids'] . ',' . $expense['uid'];
         if (!$this->validateUids($uids, $gid)) {
             return 'Error: invalid uids';
         }
 
-        if (!isset($expense->type))
-            $expense->type = 1;
+        if (!isset($expense['type']))
+            $expense['type'] = 1;
 
         $sql = "INSERT INTO expenses (type, cid, user_id, group_id, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset)
                 VALUES (:type, :cid, :user_id, :group_id, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset)";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
-                ':type' => $expense->type,
-                ':cid' => $expense->cid,
-                ':user_id' => $expense->uid,
+                ':type' => $expense['type'],
+                ':cid' => $expense['cid'],
+                ':user_id' => $expense['uid'],
                 ':group_id' => $gid,
-                ':description' => $expense->etitle,
-                ':amount' => $expense->amount,
-                ':created' => $expense->ecreated,
-                ':updated' => $expense->eupdated,
-                ':event_id' => $expense->event_id,
-                ':timezoneoffset' => $expense->timezoneoffset,
+                ':description' => $expense['etitle'],
+                ':amount' => $expense['amount'],
+                ':created' => $expense['ecreated'],
+                ':updated' => $expense['eupdated'],
+                ':event_id' => $expense['event_id'],
+                ':timezoneoffset' => $expense['timezoneoffset'],
                 ':currency' => 1
             )
         );
@@ -114,7 +114,7 @@ class Group
 
         $sql = "INSERT INTO users_expenses (user_id , expense_id) VALUES (:user_id, :eid)";
         $stmt = Db::getInstance()->prepare($sql);
-        $uids = explode(',', $expense->uids);
+        $uids = explode(',', $expense['uids']);
         foreach ($uids as $user_id) {
             $stmt->execute(array(':user_id' => $user_id, ':eid' => $eid));
         }
@@ -168,53 +168,54 @@ class Group
 
     function updateExpense($gid, $expense)
     {
-        $uids = $expense->uids . ',' . $expense->uid;
+        $uids = $expense['uids'] . ',' . $expense['uid'];
         if (!$this->validateUids($uids, $gid)) {
             return 'Error: invalid uids';
         }
 
-        $oldExpense = $this->getExpense($gid, $expense->eid, false);
+        $oldExpense = $this->getExpense($gid, $expense['eid'], false);
 
         // keep track of any users removed from this expense
         $removedUids = array_diff(explode(',', $oldExpense['uids'] . ',' . $oldExpense['uid']), explode(',', $uids));
 
-        if (!isset($expense->type))
-            $expense->type = 1;
+        if (!isset($expense['type']))
+            $expense['type'] = 1;
+
         $sql = "UPDATE expenses SET type=:type, cid=:cid, user_id=:user_id, description=:description, amount=:amount, event_id=:event_id, timestamp=:updated,
                 currency=:currency, timezoneoffset=:timezoneoffset, expense_date=FROM_UNIXTIME(:created), timestamp=FROM_UNIXTIME(:updated)
                 WHERE expense_id=:eid AND group_id=:group_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
-                ':type' => $expense->type,
-                ':cid' => $expense->cid,
-                ':user_id' => $expense->uid,
+                ':type' => $expense['type'],
+                ':cid' => $expense['cid'],
+                ':user_id' => $expense['uid'],
                 ':group_id' => $gid,
-                ':description' => $expense->etitle,
-                ':amount' => $expense->amount,
-                ':event_id' => $expense->event_id,
-                ':timezoneoffset' => $expense->timezoneoffset,
+                ':description' => $expense['etitle'],
+                ':amount' => $expense['amount'],
+                ':event_id' => $expense['event_id'],
+                ':timezoneoffset' => $expense['timezoneoffset'],
                 ':currency' => 1,
-                ':eid' => $expense->eid,
-                ':updated' => $expense->eupdated,
-                ':created' => $expense->ecreated
+                ':eid' => $expense['eid'],
+                ':updated' => $expense['eupdated'],
+                ':created' => $expense['ecreated']
             )
         );
 
         $sql = "DELETE FROM users_expenses WHERE expense_id = :eid";
         $stmt = Db::getInstance()->prepare($sql);
-        $stmt->execute(array(':eid' => $expense->eid));
+        $stmt->execute(array(':eid' => $expense['eid']));
 
         $sql = "INSERT INTO users_expenses (user_id , expense_id) VALUES (:user_id, :eid)";
         $stmt = Db::getInstance()->prepare($sql);
-        $uids = explode(',', $expense->uids);
+        $uids = explode(',', $expense['uids']);
         foreach ($uids as $user_id) {
-            $stmt->execute(array(':user_id' => $user_id, ':eid' => $expense->eid));
+            $stmt->execute(array(':user_id' => $user_id, ':eid' => $expense['eid']));
         }
 
-        $this->addExpenseEmail($expense, $expense->eid, 'update', $removedUids);
+        $this->addExpenseEmail($expense, $expense['eid'], 'update', $removedUids);
 
-        return $this->getExpense($gid, $expense->eid);
+        return $this->getExpense($gid, $expense['eid']);
     }
 
     function updateGroupDetails($groupDetails, $uid)
@@ -223,20 +224,20 @@ class Group
         $gIds = array();
         // check user requesting change is part of this group
         foreach ($groupDetails as $detailSet) {
-            if (!$this->validateUids($uids, $detailSet->gid)) {
+            if (!$this->validateUids($uids, $detailSet['gid'])) {
                 return 'Error: invalid uid';
             }
 
-            $gIds[] = $detailSet->gid;
+            $gIds[] = $detailSet['gid'];
 
             $sql = $this->updateGroupDetailsSql;
             $stmt = Db::getInstance()->prepare($sql);
             $stmt->execute(
                 array(
-                    ':gid' => $detailSet->gid,
-                    ':currency' => $detailSet->currency,
-                    ':name' => substr($detailSet->name, 0, 30),
-                    ':description' => substr($detailSet->description, 0, 60)
+                    ':gid' => $detailSet['gid'],
+                    ':currency' => $detailSet['currency'],
+                    ':name' => substr($detailSet['name'], 0, 30),
+                    ':description' => substr($detailSet['description'], 0, 60)
                 )
             );
         }
@@ -267,7 +268,7 @@ class Group
         }
 
         // get list of user_ids for emails
-        $emailList = implode(',', $body->emails);
+        $emailList = implode(',', $body['emails']);
         $sql = "SELECT user_id, email FROM users WHERE FIND_IN_SET (email, :email)";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
@@ -311,7 +312,7 @@ class Group
     function changeRole($targetUid, $gid, $request, $rUid){
         $response = array('success' => 0, 'error' => 1, 'invalid_request' => 0);
         if (empty($targetUid) || empty($gid) || empty($request)
-            || !isset($request->role_id) || $request->role_id == '' || $request->role_id > 5) {
+            || !isset($request['role_id']) || $request['role_id'] == '' || $request['role_id'] > 5) {
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
@@ -326,7 +327,7 @@ class Group
         $stmt->execute(array(':gid' => $gid));
         $result = $stmt->fetchall(\PDO::FETCH_ASSOC);
 
-        $targetRoleId = $request->role_id;
+        $targetRoleId = $request['role_id'];
         $requesterRoleId = 4;
         $currentTargetRoleId = 4;
         $founderCount = 0;
@@ -370,7 +371,7 @@ class Group
     function sendEmail($targetUid, $gid, $request, $rUid){
         $response = array('success' => 0, 'error' => 1, 'invalid_request' => 0);
         if (empty($targetUid) || empty($gid) || empty($request)
-            || !isset($request->send_email) || $request->send_email === '' ) {
+            || !isset($request['send_email']) || $request['send_email'] === '' ) {
             // error_log("send email change failed targetuid $targetUid gid $gid rUid $rUid");
             // error_log(print_r($request,1));
             return json_encode($response, JSON_NUMERIC_CHECK);
@@ -382,7 +383,7 @@ class Group
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
-        $send_mail = $request->send_email == 0 ? 0 : 1;
+        $send_mail = $request['send_email'] == 0 ? 0 : 1;
         $response = array('success' => 0, 'error' => 0, 'invalid_request' => 1);
 
         if ($rUid != $targetUid){
@@ -417,7 +418,7 @@ class Group
         //$uidList = implode(',', $body->user_ids);
         $uidList = $dUid;
         // check for paid expenses by users
-        $sql = "SELECT user_id, COUNT(*) AS ecount FROM expenses WHERE group_id = :gid 
+        $sql = "SELECT user_id, COUNT(*) AS ecount FROM expenses WHERE group_id = :gid
                 AND FIND_IN_SET (user_id, :user_ids) GROUP BY user_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
@@ -430,8 +431,8 @@ class Group
         //error_log(print_r($expensePaidCount ,1));
 
         // check for participated expenses by users
-        $sql = "SELECT users_expenses.user_id, COUNT(users_expenses.expense_id) as ecount, group_id 
-                FROM users_expenses, expenses WHERE users_expenses.expense_id = expenses.expense_id 
+        $sql = "SELECT users_expenses.user_id, COUNT(users_expenses.expense_id) as ecount, group_id
+                FROM users_expenses, expenses WHERE users_expenses.expense_id = expenses.expense_id
                 AND group_id = :gid AND FIND_IN_SET (users_expenses.user_id, :user_ids) GROUP BY user_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
@@ -496,7 +497,7 @@ class Group
             return 'Error: invalid uid';
         }
 
-        if (!is_object($categories)){
+        if (!is_array($categories)){
             return 'Error: invalid categories set 1';
         }
 
@@ -510,7 +511,7 @@ class Group
                     return 'Error: invalid categories set ' . $key;
                 }
             }
-            $maxCid = $category->cid > $maxCid ? $category->cid : $maxCid;
+            $maxCid = $category['cid'] > $maxCid ? $category['cid'] : $maxCid;
         }
         $maxCid++;  // keep track of new cid to use in case we're adding a new category
 
@@ -532,8 +533,8 @@ class Group
         $newIds = array();
         foreach ($categories as $category)
         {
-            if ($category->cid > 0)
-                $newIds[] = $category->cid;
+            if ($category['cid'] > 0)
+                $newIds[] = $category['cid'];
         }
         $diff = array_diff($currentCatIds, $newIds);
 
@@ -579,21 +580,21 @@ class Group
 
         foreach ($categories as $category){
             // check for new categories
-            if ($category->cid == 0) {
+            if ($category['cid'] == 0) {
                 $cid = $maxCid;
                 $maxCid++;
             } else {
-                $cid = $category->cid;
+                $cid = $category['cid'];
             }
 
             $stmt->execute(array(
                 ':cid' => $cid,
-                ':gid' => $category->group_id,
-                ':title' => $category->title,
-                ':presents' => $category->presents,
-                ':inactive' => $category->inactive,
-                ':can_delete' => $category->can_delete,
-                ':sort' => $category->sort
+                ':gid' => $category['group_id'],
+                ':title' => $category['title'],
+                ':presents' => $category['presents'],
+                ':inactive' => $category['inactive'],
+                ':can_delete' => $category['can_delete'],
+                ':sort' => $category['sort']
             ));
         }
 
@@ -613,7 +614,7 @@ class Group
     function addNewGroup($details, $uid){
         $response = array('success' => 0, 'gid' =>0);
 
-        if (empty($details) || empty($details->currency) || empty($details->name)) {
+        if (empty($details) || empty($details['currency']) || empty($details['name'])) {
             return json_encode($response , JSON_NUMERIC_CHECK);
         }
 
@@ -622,9 +623,9 @@ class Group
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
-                ':currency' => $details->currency,
-                ':name' => $details->name,
-                ':description' => $details->description
+                ':currency' => $details['currency'],
+                ':name' => $details['name'],
+                ':description' => $details['description']
             )
         );
         $gid = Db::getInstance()->lastInsertId();
@@ -789,7 +790,7 @@ class Group
 
     private function validateIsAdminOfGroup($uid, $gid)
     {
-        $sql = "SELECT COUNT(*) FROM users_groups WHERE user_id = :uid AND group_id = :gid 
+        $sql = "SELECT COUNT(*) FROM users_groups WHERE user_id = :uid AND group_id = :gid
                 AND (ROLE_ID=0 OR ROLE_ID=1)";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(
@@ -805,7 +806,7 @@ class Group
     {
         // error_log("START WITH EID " . $eid);
 
-        $uids = explode(',', $expense->uids);
+        $uids = explode(',', $expense['uids']);
         $uidValues = array_values($uids);
         $uid = array_pop($uidValues);
         $member = new \Models\Member();
@@ -814,24 +815,24 @@ class Group
         // keep track of users that do not want email
         // error_log(print_r($groupsInfo ,1));
         $noMailUsers = array();
-        foreach ($groupsInfo[$expense->gid]['members'] as $member){
+        foreach ($groupsInfo[$expense['gid']]['members'] as $member){
             if ($member['send_mail'] == 0) $noMailUsers[] = $member['uid'];
         }
 
-        $uidDetails = $this->getUserDetails(implode(',', array_keys($groupsInfo[$expense->gid]['members'])));
+        $uidDetails = $this->getUserDetails(implode(',', array_keys($groupsInfo[$expense['gid']]['members'])));
 
         // error_log(print_r($groupsInfo, 1));
-        $groupName = $groupsInfo[$expense->gid]['name'];
+        $groupName = $groupsInfo[$expense['gid']]['name'];
 
-        $created = date('l jS \of F Y', $expense->ecreated);
+        $created = date('l jS \of F Y', $expense['ecreated']);
         $from = 'goingdutch@santema.eu';
 
         // PHP Fatal error:  Class 'Models\NumberFormatter' not found
         // You just need to enable this extension in php.ini by uncommenting this line:
         // extension=ext/php_intl.dll
         $formatter = new \NumberFormatter('nl_NL', \NumberFormatter::CURRENCY);
-        $amount = $formatter->formatCurrency($expense->amount, $groupsInfo[$expense->gid]['currency']);
-        $amountpp = $formatter->formatCurrency($expense->amount / count($uids), $groupsInfo[$expense->gid]['currency']);
+        $amount = $formatter->formatCurrency($expense['amount'], $groupsInfo[$expense['gid']]['currency']);
+        $amountpp = $formatter->formatCurrency($expense['amount'] / count($uids), $groupsInfo[$expense['gid']]['currency']);
 
         switch ($type) {
             case 'update':
@@ -871,9 +872,9 @@ class Group
         $i = 1;
         // error_log(print_r($uidDetails,1));
         // error_log(print_r($groupsInfo[$expense->gid]['members'],1));
-        foreach ($groupsInfo[$expense->gid]['members'] as $member) {
+        foreach ($groupsInfo[$expense['gid']]['members'] as $member) {
             $posArray[$member['uid']] = $i;
-            $b = $formatter->formatCurrency($member['balance'], $groupsInfo[$expense->gid]['currency']);
+            $b = $formatter->formatCurrency($member['balance'], $groupsInfo[$expense['gid']]['currency']);
             // $style = $i < 0 ? '<style=\"color: red\">' : '<style = \"\">';
             // $balanceTable .= "<tr><td>{$i}</td><td>{$uidDetails[$member['uid']]['realname']}</td><td>{$style}{$b}</style></td></tr>\n";
             $balanceTable .= "<tr><td>{$i}</td><td>{$uidDetails[$member['uid']]['realname']}</td><td>{$b}</td></tr>\n";
@@ -882,27 +883,27 @@ class Group
         $balanceTable .= "</table>\n";
 
         $onlyPay = false;
-        if (!in_array($expense->uid, $uids)) {
+        if (!in_array($expense['uid'], $uids)) {
             $onlyPay = true;
-            $uids[] = $expense->uid;
+            $uids[] = $expense['uid'];
         }
 
         $uids = array_merge($uids, $removedUids);
         foreach ($uids as $uid) {
-            if ($onlyPay && $uid == $expense->uid) {
+            if ($onlyPay && $uid == $expense['uid']) {
                 $message = str_replace('{date}', $created, $messageTemplateOnlyPay);
             } else {
                 $message = str_replace('{date}', $created, $messageTemplate);
             }
             // $style = $groupsInfo[$expense->gid]['members'][$uid]['balance'] < 0 ? '<style=\"color: red\">' : '<style = \"\">';
-            $yourBalance = $formatter->formatCurrency($groupsInfo[$expense->gid]['members'][$uid]['balance'], $groupsInfo[$expense->gid]['currency']);
+            $yourBalance = $formatter->formatCurrency($groupsInfo[$expense['gid']]['members'][$uid]['balance'], $groupsInfo[$expense['gid']]['currency']);
             // $yourBalance = $style . $yourBalance . '</style>';
 
-            $message = str_replace('{eowner}', $expense->uid == $uid ? "you" : $uidDetails[$expense->uid]['realname'], $message);
+            $message = str_replace('{eowner}', $expense['uid'] == $uid ? "you" : $uidDetails[$expense['uid']]['realname'], $message);
             $message = str_replace('{amount}', $amount, $message);
             $message = str_replace('{amountpp}', $amountpp, $message);
             $message = str_replace('{yourbalance}', $yourBalance, $message);
-            $message = str_replace('{description}', $expense->etitle, $message);
+            $message = str_replace('{description}', $expense['etitle'], $message);
             $message = str_replace('{yourposition}', $posArray[$uid], $message);
             $message = str_replace('{balancelist}', $balanceTable, $message);
             $message = str_replace('{eid}', $eid, $message);
@@ -920,7 +921,7 @@ class Group
                 // error_log("EID: " .  $eid . " COUNT: " . $count . " Onlypay: " . $onlyPay . " Uids: " . implode(",", $uids) . ' UID: ' . $expense->uid);
 
                 foreach ($uids as $uidP) {
-                    if ($uid == $uidP || ($onlyPay && $uidP == $expense->uid) || in_array($uidP, $removedUids))
+                    if ($uid == $uidP || ($onlyPay && $uidP == $expense['uid']) || in_array($uidP, $removedUids))
                         continue;
                     $participants[] = $uidDetails[$uidP]['realname'];
                 }
@@ -928,7 +929,7 @@ class Group
                 $participants = count($participants) ? implode(", ", $participants) . " and " . $last : $last;
             } elseif ($count == 1 && $onlyPay) {
                 foreach ($uids as $uidP) {
-                    if ($uidP != $expense->uid && !in_array($uidP, $removedUids)) {
+                    if ($uidP != $expense['uid'] && !in_array($uidP, $removedUids)) {
                         $participants = $uidDetails[$uidP]['realname'];
                     }
                 }
@@ -947,7 +948,7 @@ class Group
                 $stmt = Db::getInstance()->prepare($sql);
                 $stmt->execute(
                     array(
-                        ':gid' => $expense->gid,
+                        ':gid' => $expense['gid'],
                         ':eid' => $eid,
                         ':subject' => $subject,
                         ':message' => $message,
@@ -1032,22 +1033,3 @@ class Group
         return $sql;
     }
 }
-
-/*
- * CREATE TABLE `Email` (
-  `email_id` INT NOT NULL AUTO_INCREMENT,
-  `gid` INT NOT NULL DEFAULT '0',
-  `eid` INT NULL DEFAULT '0',
-  `subject` TINYTEXT NULL,
-  `message` TEXT NULL,
-  `to` TEXT NULL,
-  `from` TEXT NULL,
-  `submitted` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-  `sent` DATETIME NULL DEFAULT '0',
-  PRIMARY KEY (`email_id`)
-)
-  COLLATE='utf8_general_ci'
-  ENGINE=InnoDB
-;
-
- */

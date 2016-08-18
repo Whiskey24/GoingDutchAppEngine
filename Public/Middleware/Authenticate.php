@@ -44,15 +44,13 @@ class Authenticate
             list($name, $pass) = explode(':', base64_decode(substr($_SERVER['REDIRECT_HTTP_AUTHORIZATION'], 6)));
         }
 
-        error_log("Name = {$name}, Pass = {$pass}", 0);
-
         // validate the credentials
         if (!empty($name) && !empty($pass) && $pass !== 0) {
             $salt = $app_config['secret']['hash'];
             $hash = md5($salt . $pass . $salt);
 
             // validate credentials
-            $stmt = Db::getInstance()->prepare("SELECT users.* FROM users WHERE email = :name 
+            $stmt = Db::getInstance()->prepare("SELECT users.* FROM users WHERE email = :name
                                                 AND (password = :hash OR pwd_recovery = :hash)
                                                 AND account_deleted = 0");
             $stmt->execute(array(':name' => $name, ':hash' => $hash));

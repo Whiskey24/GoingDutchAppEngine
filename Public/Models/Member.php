@@ -75,7 +75,7 @@ class Member
 
         // get the role for each user in each group
         // Get the total paid by this user in each group
-        $sql = "SELECT user_id, group_id, users_groups.role_id, users_groups.send_mail, shortname FROM users_groups, roles WHERE FIND_IN_SET(user_id, :uids) 
+        $sql = "SELECT user_id, group_id, users_groups.role_id, users_groups.send_mail, shortname FROM users_groups, roles WHERE FIND_IN_SET(user_id, :uids)
                 AND FIND_IN_SET(group_id, :gids) AND users_groups.role_id = roles.role_id GROUP BY user_id, group_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(':uids' => $user_id_list, ':gids' => $group_id_list));
@@ -142,14 +142,14 @@ class Member
     }
 
     function updatePassword($uid, $details, $rUid){
-        if (empty($details->password) || $uid != $rUid){
+        if (empty($details['password']) || $uid != $rUid){
             $response = array('success' => 0);
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
         global $app_config;
         $salt = $app_config['secret']['hash'];
-        $hash = md5($salt . $details->password . $salt);
+        $hash = md5($salt . $details-['password'] . $salt);
 
         $sql = "UPDATE users SET password=:password WHERE user_id=:uid";
         $stmt = Db::getInstance()->prepare($sql);
@@ -165,18 +165,18 @@ class Member
 
     function updateMemberDetails($requestUid, $details, $askedByUid)
     {
-        if ($requestUid != $askedByUid || $requestUid != $details->uid){
+        if ($requestUid != $askedByUid || $requestUid != $details['uid']){
             return 'Error: invalid request';
         }
 
         $sql = "UPDATE users SET username=:nickName, firstName=:firstName, lastName=:lastName, realname=:realname, email=:email WHERE user_id=:uid";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(
-            ':nickName' => $details->nickName,
-            ':firstName' => $details->firstName,
-            ':lastName' => $details->lastName,
-            ':realname' => $details->realname,
-            ':email' => $details->email,
+            ':nickName' => $details['nickName'],
+            ':firstName' => $details['firstName'],
+            ':lastName' => $details['lastName'],
+            ':realname' => $details['realname'],
+            ':email' => $details['email'],
             ':uid' => $requestUid
         ));
 
@@ -194,9 +194,9 @@ class Member
         foreach ($groups as $group) {
             $stmt->execute(
                 array(
-                    ':sort' => $group->sort,
+                    ':sort' => $group['sort'],
                     ':uid' => $uidToUpdate,
-                    ':group_id' => $group->gid,
+                    ':group_id' => $group['gid'],
                 )
             );
         }
@@ -215,11 +215,11 @@ class Member
 
     function emailExists($details){
         $response = array('error' => 1);
-        if (empty($details) || empty($details->email)) {
+        if (empty($details) || empty($details['email'])) {
             return json_encode($response , JSON_NUMERIC_CHECK);
         }
 
-        $userCount = $this->emailInDb($details->email);
+        $userCount = $this->emailInDb($details['email']);
         if ($userCount > 0) {
             $response = array('error' => 0, 'exists' => 1);
         } else {
@@ -241,14 +241,14 @@ class Member
         global $app_config;
         $response = array('success' => 0, 'uid' =>0);
 
-        if (empty($details) || empty($details->nickName) || empty($details->pass)) {
+        if (empty($details) || empty($details['nickName']) || empty($details['pass'])) {
             return json_encode($response , JSON_NUMERIC_CHECK);
         }
 
         // check for existing email
         $sql = "SELECT COUNT(*) FROM users WHERE email = :email";
         $stmt = Db::getInstance()->prepare($sql);
-        $stmt->execute(array(':email' => $details->email));
+        $stmt->execute(array(':email' => $details['email']));
         $result = $stmt->fetch(\PDO::FETCH_NUM);
         $userCount = $result[0];
         if ($userCount> 0) {
@@ -256,37 +256,21 @@ class Member
         }
 
         $salt = $app_config['secret']['hash'];
-        $hash = md5($salt . $details->pass . $salt);
+        $hash = md5($salt . $details['pass'] . $salt);
         $now = time();
 
         $sql = "INSERT INTO users (username, password, email, realname, firstName, lastName, activated, account_deleted, confirmation, reg_date, last_login, updated)
                 VALUES (:username, :password, :email, :realname, :firstName, :lastName, :activated, :account_deleted, :confirmation, :reg_date, :last_login, :updated)";
         $stmt = Db::getInstance()->prepare($sql);
 
-//        $debug = $this->pdo_sql_debug($sql, array(
-//            ':username' => trim($details->nickName),
-//            ':password' => $hash,
-//            ':email' => trim($details->email),
-//            ':realname' => trim($details->fullName),
-//            ':firstName' => trim($details->firstName),
-//            ':lastName' => trim($details->lastName),
-//            ':activated' => 1,
-//            ':account_deleted' =>0,
-//            ':confirmation' => 0,
-//            ':reg_date' => $now,
-//            ':last_login' => 0,
-//            ':updated' => $now
-//        ) );
-//        error_log($debug);
-
         $stmt->execute(
             array(
-                ':username' => trim($details->nickName),
+                ':username' => trim($details['nickName']),
                 ':password' => $hash,
-                ':email' => trim($details->email),
-                ':realname' => trim($details->fullName),
-                ':firstName' => trim($details->firstName),
-                ':lastName' => trim($details->lastName),
+                ':email' => trim($details['email']),
+                ':realname' => trim($details['fullName']),
+                ':firstName' => trim($details['firstName']),
+                ':lastName' => trim($details['lastName']),
                 ':activated' => 1,
                 ':account_deleted' =>0,
                 ':confirmation' => 0,
@@ -302,14 +286,14 @@ class Member
 
     function deleteMember($details, $uid){
         $response = array('success' => 0);
-        if (empty($details) || empty($details->email) || empty($details->uid)) {
+        if (empty($details) || empty($details['email']) || empty($details['uid'])) {
             return json_encode($response , JSON_NUMERIC_CHECK);
         }
 
         // check if email and uid match
         $sql = "SELECT COUNT(*) FROM users WHERE email = :email AND user_id = :uid";
         $stmt = Db::getInstance()->prepare($sql);
-        $stmt->execute(array(':email' => $details->email, ':uid' => $details->uid));
+        $stmt->execute(array(':email' => $details['email'], ':uid' => $details['uid']));
         $result = $stmt->fetch(\PDO::FETCH_NUM);
         $userCount = $result[0];
         if ($userCount < 1) {
@@ -317,14 +301,14 @@ class Member
         }
 
         // a user can only delete himself
-        if ($uid !== $details->uid){
+        if ($uid !== $details['uid']){
             return json_encode($response , JSON_NUMERIC_CHECK);
         }
 
         // only completely delete a user if he has no expenses or things break
         $sql = "SELECT COUNT(*) FROM expenses WHERE user_id = :uid";
         $stmt = Db::getInstance()->prepare($sql);
-        $stmt->execute(array(':uid' => $details->uid));
+        $stmt->execute(array(':uid' => $details['uid']));
         $result = $stmt->fetch(\PDO::FETCH_NUM);
         $count = $result[0];
         $full_delete = true;
@@ -333,7 +317,7 @@ class Member
         } else {
             $sql = "SELECT COUNT(*) FROM users_expenses WHERE user_id = :uid";
             $stmt = Db::getInstance()->prepare($sql);
-            $stmt->execute(array(':uid' => $details->uid));
+            $stmt->execute(array(':uid' => $details['uid']));
             $result = $stmt->fetch(\PDO::FETCH_NUM);
             $count = $result[0];
             if ($count > 0) {
@@ -344,12 +328,12 @@ class Member
         if ($full_delete) {
             $sql = "DELETE FROM users WHERE user_id = :uid AND email = :email";
             $stmt = Db::getInstance()->prepare($sql);
-            $stmt->execute(array(':email' => $details->email, ':uid' => $details->uid));
+            $stmt->execute(array(':email' => $details['email'], ':uid' => $details['uid']));
 
             // check if deleted
             $sql = "SELECT COUNT(*) FROM users WHERE email = :email AND user_id = :uid";
             $stmt = Db::getInstance()->prepare($sql);
-            $stmt->execute(array(':email' => $details->email, ':uid' => $details->uid));
+            $stmt->execute(array(':email' => $details['email'], ':uid' => $details['uid']));
             $result = $stmt->fetch(\PDO::FETCH_NUM);
             $userCount = $result[0];
             if ($userCount > 0) {
@@ -358,7 +342,7 @@ class Member
         } else {
             $sql = "UPDATE users SET account_deleted = 1 WHERE user_id = :user_id";
             $stmt = Db::getInstance()->prepare($sql);
-            $stmt->execute(array(':user_id' => $details->uid));
+            $stmt->execute(array(':user_id' => $details['uid']));
         }
 
         $response = array('success' => 1);
@@ -369,18 +353,18 @@ class Member
         global $app_config;
 
         $response = array('success' => 0);
-        if (empty($details || empty($details->email))) {
+        if (empty($details || empty($details['email']))) {
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
-        $userCount = $this->emailInDb($details->email);
+        $userCount = $this->emailInDb($details['email']);
         if ($userCount == 0){
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
         $sql = "SELECT user_id FROM users WHERE email = :email";
         $stmt = Db::getInstance()->prepare($sql);
-        $stmt->execute(array(':email' => $details->email));
+        $stmt->execute(array(':email' => $details['email']));
         $uid = $stmt->fetchColumn();
 
         $newPwd = $this->randstr(6);
@@ -405,7 +389,7 @@ class Member
                 ':eid' => 0,
                 ':subject' => $email_subject,
                 ':message' => $email_msg,
-                ':toaddress' => $details->email,
+                ':toaddress' => $details['email'],
                 ':fromaddress' => $from,
                 ':submitted' => time(),
             )
