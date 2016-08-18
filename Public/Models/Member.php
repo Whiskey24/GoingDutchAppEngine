@@ -65,7 +65,7 @@ class Member
             $p_uid = $userPaid['user_id'];
             if (!array_key_exists($gid, $groups))
                 continue;
-            floatval($userPaid['paid']);
+            $groups[$gid]['members'][$p_uid]['paid'] = floatval($userPaid['paid']);
             $groups[$gid]['members'][$p_uid]['balance'] = floatval($userPaid['paid']) - $groups[$gid]['members'][$p_uid]['expense'];
         }
 
