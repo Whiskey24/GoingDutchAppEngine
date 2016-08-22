@@ -286,8 +286,8 @@ class Group
 
         $added = 0;
         // this could be optimized into a single query for speed
-        $sql = "INSERT INTO users_groups (user_id, group_id, role_id, join_date)
-                VALUES (:user_id, :group_id, :role_id, FROM_UNIXTIME(:submitted))";
+        $sql = "INSERT INTO users_groups (user_id, group_id, sort, role_id, join_date)
+                VALUES (:user_id, :group_id, :sort, :role_id, FROM_UNIXTIME(:submitted))";
         $stmt = Db::getInstance()->prepare($sql);
         foreach ($emailUsers as $invitee) {
             // skip users that are already a group member
@@ -298,6 +298,7 @@ class Group
                 array(
                     ':user_id' => $invitee['user_id'],
                     ':group_id' => $gid,
+                    ':sort' => 0,
                     ':role_id' => 4,
                     ':submitted' => time()
                 )
