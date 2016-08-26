@@ -95,7 +95,6 @@ class Group
         $sql = "INSERT INTO expenses (type, cid, user_id, group_id, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset)
                 VALUES (:type, :cid, :user_id, :group_id, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset)";
         $stmt = Db::getInstance()->prepare($sql);
-
         $stmt->execute(
             array(
                 ':type' => $expense['type'],
@@ -161,7 +160,7 @@ class Group
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(':eid' => $eid));
 
-        $expense = json_decode(json_encode($expense), FALSE);
+        $expense = json_decode(json_encode($expense), TRUE);
         $this->addExpenseEmail($expense, $eid, 'delete');
 
         return $eid;
@@ -181,12 +180,11 @@ class Group
 
         if (!isset($expense['type']))
             $expense['type'] = 1;
-
-        $sql = "UPDATE expenses SET type=:type, cid=:cid, user_id=:user_id, description=:description, amount=:amount, event_id=:event_id,
+        
+        $sql = "UPDATE expenses SET type=:type, cid=:cid, user_id=:user_id, description=:description, amount=:amount, event_id=:event_id, 
                 currency=:currency, timezoneoffset=:timezoneoffset, expense_date=FROM_UNIXTIME(:created), timestamp=FROM_UNIXTIME(:updated)
                 WHERE expense_id=:eid AND group_id=:group_id";
         $stmt = Db::getInstance()->prepare($sql);
-
         $stmt->execute(
             array(
                 ':type' => $expense['type'],
@@ -421,7 +419,7 @@ class Group
         //$uidList = implode(',', $body->user_ids);
         $uidList = $dUid;
         // check for paid expenses by users
-        $sql = "SELECT user_id, COUNT(*) AS ecount FROM expenses WHERE group_id = :gid
+        $sql = "SELECT user_id, COUNT(*) AS ecount FROM expenses WHERE group_id = :gid 
                 AND FIND_IN_SET (user_id, :user_ids) GROUP BY user_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
@@ -434,8 +432,8 @@ class Group
         //error_log(print_r($expensePaidCount ,1));
 
         // check for participated expenses by users
-        $sql = "SELECT users_expenses.user_id, COUNT(users_expenses.expense_id) as ecount, group_id
-                FROM users_expenses, expenses WHERE users_expenses.expense_id = expenses.expense_id
+        $sql = "SELECT users_expenses.user_id, COUNT(users_expenses.expense_id) as ecount, group_id 
+                FROM users_expenses, expenses WHERE users_expenses.expense_id = expenses.expense_id 
                 AND group_id = :gid AND FIND_IN_SET (users_expenses.user_id, :user_ids) GROUP BY user_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
@@ -794,7 +792,7 @@ class Group
 
     private function validateIsAdminOfGroup($uid, $gid)
     {
-        $sql = "SELECT COUNT(*) FROM users_groups WHERE user_id = :uid AND group_id = :gid
+        $sql = "SELECT COUNT(*) FROM users_groups WHERE user_id = :uid AND group_id = :gid 
                 AND (ROLE_ID=0 OR ROLE_ID=1)";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(

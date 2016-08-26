@@ -1,26 +1,26 @@
 
 # Add email message table
 # Default column for DATETIME will probably fail for older MySQL versions
-CREATE TABLE `email` (
-  `email_id` INT NOT NULL AUTO_INCREMENT,
-  `gid` INT NOT NULL DEFAULT '0',
-  `eid` INT NULL DEFAULT '0',
-  `subject` TINYTEXT NULL,
-  `message` TEXT NULL,
-  `toaddress` TEXT NULL,
-  `fromaddress` TEXT NULL,
-  `submitted` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-  `sent` DATETIME NULL DEFAULT '0',
-  PRIMARY KEY (`email_id`)
-)
-  COLLATE='utf8_general_ci'
-  ENGINE=InnoDB
-;
+# CREATE TABLE `email` (
+#   `email_id` INT NOT NULL AUTO_INCREMENT,
+#   `gid` INT NOT NULL DEFAULT '0',
+#   `eid` INT NULL DEFAULT '0',
+#   `subject` TINYTEXT NULL,
+#   `message` TEXT NULL,
+#   `toaddress` TEXT NULL,
+#   `fromaddress` TEXT NULL,
+#   `submitted` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+#   `sent` DATETIME NULL,
+#   PRIMARY KEY (`email_id`)
+# )
+#   COLLATE='utf8_general_ci'
+#   ENGINE=InnoDB
+# ;
 
 # Replace deleted expenses table
 
 DROP TABLE `expenses_del`;
-CREATE TABLE `goingdutch`.`expenses_del` (
+CREATE TABLE `expenses_del` (
   `expense_id` INT(11) NOT NULL,
   `type` INT(11) NOT NULL,
   `cid` INT(11) NOT NULL,
@@ -83,22 +83,13 @@ CREATE TABLE `categories` (
   ENGINE=InnoDB;
 
 # Add timezoneoffset to expenses table
-ALTER TABLE `expenses` ADD COLUMN `timezoneoffset` SMALLINT NOT NULL DEFAULT '0' AFTER `currency`;
+#ALTER TABLE `expenses` ADD COLUMN `timezoneoffset` SMALLINT NOT NULL DEFAULT '0' AFTER `currency`;
 
 # Add cid to expenses table
 ALTER TABLE `expenses` ADD COLUMN `cid` INT(11) NOT NULL AFTER `type`;
 
 
 # Copy existing expense types over as categories
-
-INSERT INTO `categories` (`cid`, `expense_type_id`, `description`) VALUES
-  (1, 'food/drinks', 1),
-  (2, 'tickets', 2),
-  (3, 'presents'),
-  (4, 'games'),
-  (5, 'payment'),
-  (6, 'beer', 6);
-
 
 INSERT INTO `categories` (`cid`, `group_id`, `title`, `sort`) VALUES (1, 1, 'food/drinks', 1);
 INSERT INTO `categories` (`cid`, `group_id`, `title`, `sort`) VALUES (2, 1, 'tickets', 2);
