@@ -59,17 +59,18 @@ class Authenticate
                 $authorized = true;
                 self::$requestUid = intval($result['user_id']);
             }
-            else {
-                $stmt = Db::getInstance()->prepare("SELECT users.* FROM users WHERE username = :name 
-                                                    AND (password = :hash OR pwd_recovery = :hash)
-                                                    AND account_deleted = 0");
-                $stmt->execute(array(':name' => $name, ':hash' => $hash));
-                $result = $stmt->fetch();
-                if ($result) {
-                    $authorized = true;
-                    self::$requestUid = intval($result['user_id']);
-                }
-            }
+            // disable login on username
+//            else {
+//                $stmt = Db::getInstance()->prepare("SELECT users.* FROM users WHERE username = :name
+//                                                    AND (password = :hash OR pwd_recovery = :hash)
+//                                                    AND account_deleted = 0");
+//                $stmt->execute(array(':name' => $name, ':hash' => $hash));
+//                $result = $stmt->fetch();
+//                if ($result) {
+//                    $authorized = true;
+//                    self::$requestUid = intval($result['user_id']);
+//                }
+//            }
         }
 
         if (!$authorized)

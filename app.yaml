@@ -1,4 +1,4 @@
-application: going-dutch-eu
+application: going-dutch-api
 version: 1
 runtime: php55
 api_version: 1
@@ -6,4 +6,12 @@ threadsafe: true
 
 handlers:
 - url: .*
-  script: main.php
+  script: Public/main.php
+
+env_variables:
+  MYSQL_DEV_DSN: 'mysql:host=127.0.0.1;port=3306;dbname=DBNAME'
+  MYSQL_DEV_USERNAME: 'USERNAME'
+  MYSQL_DEV_PASSWORD: 'PASSWORD'
+  MYSQL_DSN: 'mysql:unix_socket=/cloudsql/GOOGLE_DSN;dbname=DBNAME'
+  MYSQL_USERNAME: 'USERNAME'
+  MYSQL_PASSWORD: 'PASSWORD'
