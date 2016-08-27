@@ -1,4 +1,6 @@
 <?php
+use google\appengine\api\taskqueue\PushTask;
+use google\appengine\api\taskqueue\PushQueue;
 
 class Db{
     // http://www.phpro.org/tutorials/Introduction-to-PHP-PDO.html#4
@@ -53,6 +55,12 @@ class Db{
      *
      */
     private function __clone(){
+    }
+
+    public static function triggerSendMail() {
+        $task = new PushTask('/tasks/email');
+        $queue = new PushQueue('email-queue');
+        $queue->addTasks([$task]);
     }
 
 } /*** end of class ***/

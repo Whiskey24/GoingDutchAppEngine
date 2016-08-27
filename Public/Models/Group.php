@@ -962,14 +962,16 @@ class Group
             }
         }
 
-        $file = 'C:\xampp\htdocs\api.gdutch.nl\sendmail.php';
+//        $file = 'C:\xampp\htdocs\api.gdutch.nl\sendmail.php';
 
         //$cmd = "/usr/bin/php5 {$background_mailfile} {$user['email']} {$from} \"{$from_name}\" \"{$subject}\" \"{$body}\" \"{$replyto}\" \"{$sendas}\"";
         //exec("/usr/bin/php {$background_mailfile} {$user['email']} {$from} {$from_name} {$subject} {$body} {$replyto} {$sendas} > {$ouput} &");
-        $cmd = "C:\\xampp\\php\\php.exe {$file}";
-        $output = '/dev/null';
+//        $cmd = "C:\\xampp\\php\\php.exe {$file}";
+//        $output = '/dev/null';
         // exec("{$cmd} > {$output} &");
-        exec("{$cmd} ");
+        // exec("{$cmd} ");
+        Db::triggerSendMail();
+
     }
 
     private function getUserDetails($uids)
