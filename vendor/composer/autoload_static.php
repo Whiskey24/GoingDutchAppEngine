@@ -24,6 +24,10 @@ class ComposerStaticInitc13abca6ef844e05179eb70dab6c9f45
         array (
             'Interop\\Container\\' => 18,
         ),
+        'H' => 
+        array (
+            'Html2Text\\' => 10,
+        ),
         'F' => 
         array (
             'FastRoute\\' => 10,
@@ -46,6 +50,10 @@ class ComposerStaticInitc13abca6ef844e05179eb70dab6c9f45
         'Interop\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/container-interop/container-interop/src/Interop/Container',
+        ),
+        'Html2Text\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/soundasleep/html2text/src',
         ),
         'FastRoute\\' => 
         array (

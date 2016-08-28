@@ -10,5 +10,6 @@ return array(
     'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-message/src'),
     'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),
     'Interop\\Container\\' => array($vendorDir . '/container-interop/container-interop/src/Interop/Container'),
+    'Html2Text\\' => array($vendorDir . '/soundasleep/html2text/src'),
     'FastRoute\\' => array($vendorDir . '/nikic/fast-route/src'),
 );

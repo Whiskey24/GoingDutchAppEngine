@@ -11,6 +11,7 @@
   ],
   "require": {
     "slim/slim": "3.5.0",
-    "phpmailer/phpmailer": "v6.0.0rc2"
+    "phpmailer/phpmailer": "v6.0.0rc2",
+    "soundasleep/html2text": "0.3.4"
   }
 }

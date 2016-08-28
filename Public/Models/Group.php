@@ -873,7 +873,11 @@ class Group
         $balanceTable = "\n<table>\n";
         $i = 1;
         // error_log(print_r($uidDetails,1));
-        // error_log(print_r($groupsInfo[$expense->gid]['members'],1));
+        // error_log(print_r($groupsInfo[$expense['gid']]['members'],1));
+
+        $this->aasort($groupsInfo[$expense['gid']]['members'],"balance", true);
+        //error_log(print_r($groupsInfo[$expense['gid']]['members'],1));
+
         foreach ($groupsInfo[$expense['gid']]['members'] as $member) {
             $posArray[$member['uid']] = $i;
             $b = $formatter->formatCurrency($member['balance'], $groupsInfo[$expense['gid']]['currency']);
@@ -1003,6 +1007,27 @@ class Group
         $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         return $result;
     }
+
+
+
+    private function aasort (&$array, $key, $descending = false) {
+        $sorter=array();
+        $ret=array();
+        reset($array);
+        foreach ($array as $ii => $va) {
+            $sorter[$ii]=$va[$key];
+        }
+        if ($descending) arsort($sorter);
+        else asort($sorter);
+        foreach ($sorter as $ii => $va) {
+            $ret[$ii]=$array[$ii];
+        }
+        $array=$ret;
+    }
+
+
+
+
 
 //    private function queueEmail($gid, $eid, $subject, $message, $to, $from){
 //        if (!isset($expense->type))
