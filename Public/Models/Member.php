@@ -149,7 +149,7 @@ class Member
 
         global $app_config;
         $salt = $app_config['secret']['hash'];
-        $hash = md5($salt . $details-['password'] . $salt);
+        $hash = md5($salt . $details['password'] . $salt);
 
         $sql = "UPDATE users SET password=:password WHERE user_id=:uid";
         $stmt = Db::getInstance()->prepare($sql);
