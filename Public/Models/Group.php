@@ -39,7 +39,7 @@ class Group
 
     function getExpenses($gid)
     {
-        $sql = $this->readExpensesSql . "ORDER BY expense_date DESC, eid DESC";
+        $sql = $this->readExpensesSql . "ORDER BY expense_date DESC, eid DESC LIMIT 100";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(':gid' => $gid));
         // put the results in an array with gid as key
