@@ -5,13 +5,18 @@ api_version: 1
 threadsafe: true
 
 handlers:
+
+- url: /tasks/email
+  script: Tasks/SendMail.php
+  login: admin
+
 - url: .*
   script: Public/main.php
 
 env_variables:
-  MYSQL_DEV_DSN: 'mysql:host=127.0.0.1;port=3306;dbname=DBNAME'
-  MYSQL_DEV_USERNAME: 'USERNAME'
-  MYSQL_DEV_PASSWORD: 'PASSWORD'
-  MYSQL_DSN: 'mysql:unix_socket=/cloudsql/GOOGLE_DSN;dbname=DBNAME'
-  MYSQL_USERNAME: 'USERNAME'
-  MYSQL_PASSWORD: 'PASSWORD'
+  MYSQL_DEV_DSN: 'mysql:host=127.0.0.1;port=3306;dbname=goingdutch'
+  MYSQL_DEV_USERNAME: 'dutch'
+  MYSQL_DEV_PASSWORD: '58r4huw239'
+  MYSQL_DSN: 'mysql:unix_socket=/cloudsql/going-dutch-eu:europe-west1:going-dutch-eu-sql;dbname=goingdutch'
+  MYSQL_USERNAME: 'root'
+  MYSQL_PASSWORD: 'zO8EADPRsaq3'

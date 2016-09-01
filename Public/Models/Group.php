@@ -436,7 +436,7 @@ class Group
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
-        error_log("Trying to delete {$dUid} in group {$gid}");
+        // error_log("Trying to delete {$dUid} in group {$gid}");
 
         //$uidList = implode(',', $body->user_ids);
         $uidList = $dUid;
