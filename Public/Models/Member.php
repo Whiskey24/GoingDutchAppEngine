@@ -75,7 +75,7 @@ class Member
 
         // get the role for each user in each group
         // Get the total paid by this user in each group
-        $sql = "SELECT user_id, group_id, users_groups.role_id, users_groups.send_mail, shortname FROM users_groups, roles WHERE FIND_IN_SET(user_id, :uids) 
+        $sql = "SELECT user_id, group_id, users_groups.role_id, users_groups.send_mail, shortname, removed FROM users_groups, roles WHERE FIND_IN_SET(user_id, :uids) 
                 AND FIND_IN_SET(group_id, :gids) AND users_groups.role_id = roles.role_id GROUP BY user_id, group_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(':uids' => $user_id_list, ':gids' => $group_id_list));
@@ -84,6 +84,7 @@ class Member
             $groups[$user['group_id']]['members'][$user['user_id']]['role_id'] = $user['role_id'];
             $groups[$user['group_id']]['members'][$user['user_id']]['send_mail'] = $user['send_mail'];
             $groups[$user['group_id']]['members'][$user['user_id']]['role'] = $user['shortname'];
+            $groups[$user['group_id']]['members'][$user['user_id']]['removed'] = $user['removed'];
         }
 
         // Get all the categories for these groups
@@ -262,7 +263,7 @@ class Member
         $sql = "INSERT INTO users (username, password, email, realname, firstName, lastName, activated, account_deleted, confirmation, reg_date, last_login, updated)
                 VALUES (:username, :password, :email, :realname, :firstName, :lastName, :activated, :account_deleted, :confirmation, :reg_date, :last_login, :updated)";
         $stmt = Db::getInstance()->prepare($sql);
-        
+
         $stmt->execute(
             array(
                 ':username' => trim($details['nickName']),
