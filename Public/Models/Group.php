@@ -14,8 +14,8 @@ class Group
 {
 
     protected $readExpensesSql = "SELECT expense_id AS eid, group_id AS gid, cid, type, description AS etitle, user_id AS uid,
-                amount, amount, UNIX_TIMESTAMP(expense_date) AS ecreated,
-                UNIX_TIMESTAMP(timestamp) AS eupdated, timezoneoffset, event_id, deposit_id AS depid,
+                amount, UNIX_TIMESTAMP(expense_date) AS ecreated,
+                UNIX_TIMESTAMP(timestamp) AS eupdated, timezoneoffset, event_id, deposit_id AS depid, updated_by, 
                 (SELECT GROUP_CONCAT(DISTINCT users_expenses.user_id)
                     FROM users_expenses, users_groups
                     WHERE users_expenses.user_id = users_groups.user_id AND users_expenses.expense_id = eid
@@ -39,7 +39,7 @@ class Group
 
     function getExpenses($gid)
     {
-        $sql = $this->readExpensesSql . "ORDER BY expense_date DESC, eid DESC LIMIT 100";
+        $sql = $this->readExpensesSql . "ORDER BY expense_date DESC, eid DESC";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(array(':gid' => $gid));
         // put the results in an array with gid as key
@@ -82,7 +82,7 @@ class Group
             return $expense;
     }
 
-    function addExpense($gid, $expense)
+    function addExpense($gid, $expense, $updated_by_user)
     {
         $uids = $expense['uids'] . ',' . $expense['uid'];
         if (!$this->validateUids($uids, $gid)) {
@@ -92,8 +92,8 @@ class Group
         if (!isset($expense['type']))
             $expense['type'] = 1;
 
-        $sql = "INSERT INTO expenses (type, cid, user_id, group_id, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset)
-                VALUES (:type, :cid, :user_id, :group_id, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset)";
+        $sql = "INSERT INTO expenses (type, cid, user_id, group_id, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset, updated_by)
+                VALUES (:type, :cid, :user_id, :group_id, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset, :updated_by)";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
@@ -107,7 +107,8 @@ class Group
                 ':updated' => $expense['eupdated'],
                 ':event_id' => $expense['event_id'],
                 ':timezoneoffset' => $expense['timezoneoffset'],
-                ':currency' => 1
+                ':currency' => 1,
+                ':updated_by' => $updated_by_user
             )
         );
         $eid = Db::getInstance()->lastInsertId();
@@ -130,8 +131,8 @@ class Group
 
         if (!isset($expense['type']))
             $expense['type'] = 1;
-        $sql = "INSERT INTO expenses_del (expense_id, type, cid, user_id, group_id, uids, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset, delete_date)
-                VALUES (:eid, :type, :cid, :user_id, :group_id, :uids, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset, FROM_UNIXTIME(:now))";
+        $sql = "INSERT INTO expenses_del (expense_id, type, cid, user_id, group_id, uids, description, amount, expense_date, event_id, timestamp, currency, timezoneoffset, updated_by, delete_date)
+                VALUES (:eid, :type, :cid, :user_id, :group_id, :uids, :description, :amount, FROM_UNIXTIME(:created), :event_id, FROM_UNIXTIME(:updated), :currency, :timezoneoffset, :updated_by, FROM_UNIXTIME(:now))";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
@@ -148,6 +149,7 @@ class Group
                 ':event_id' => $expense['event_id'],
                 ':timezoneoffset' => $expense['timezoneoffset'],
                 ':currency' => 1,
+                ':updated_by' => $expense['updated_by'],
                 ':now' => time()
             )
         );
@@ -166,7 +168,7 @@ class Group
         return $eid;
     }
 
-    function updateExpense($gid, $expense)
+    function updateExpense($gid, $expense, $updated_by_uid)
     {
         $uids = $expense['uids'] . ',' . $expense['uid'];
         if (!$this->validateUids($uids, $gid)) {
@@ -182,7 +184,8 @@ class Group
             $expense['type'] = 1;
 
         $sql = "UPDATE expenses SET type=:type, cid=:cid, user_id=:user_id, description=:description, amount=:amount, event_id=:event_id, 
-                currency=:currency, timezoneoffset=:timezoneoffset, expense_date=FROM_UNIXTIME(:created), timestamp=FROM_UNIXTIME(:updated)
+                currency=:currency, timezoneoffset=:timezoneoffset, expense_date=FROM_UNIXTIME(:created), timestamp=FROM_UNIXTIME(:updated),
+                updated_by=:updated_by
                 WHERE expense_id=:eid AND group_id=:group_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
@@ -198,7 +201,8 @@ class Group
                 ':currency' => 1,
                 ':eid' => $expense['eid'],
                 ':updated' => $expense['eupdated'],
-                ':created' => $expense['ecreated']
+                ':created' => $expense['ecreated'],
+                ':updated_by' => $updated_by_uid
             )
         );
 
@@ -282,12 +286,7 @@ class Group
         // get current group members to avoid adding twice
         $memberList = $this->getGroupUserIds($gid);
 
-        // previously removed members are treated differently
-        $removedMemberList = $this->getGroupRemovedUserIds($gid);
-
         $added = 0;
-        $addRemovedUsers = array();
-
         // this could be optimized into a single query for speed
         $sql = "INSERT INTO users_groups (user_id, group_id, sort, role_id, join_date)
                 VALUES (:user_id, :group_id, :sort, :role_id, FROM_UNIXTIME(:submitted))";
@@ -297,11 +296,6 @@ class Group
             if (in_array($invitee['user_id'], $memberList))
                 continue;
 
-            if (in_array($invitee['user_id'], $removedMemberList)) {
-                $addRemovedUsers[] = $invitee['user_id'];
-                continue;
-            }
-
             $stmt->execute(
                 array(
                     ':user_id' => $invitee['user_id'],
@@ -309,18 +303,6 @@ class Group
                     ':sort' => 0,
                     ':role_id' => 4,
                     ':submitted' => time()
-                )
-            );
-            $added++;
-        }
-
-        $sql = "UPDATE users_groups SET removed=0 WHERE user_id=:user_id AND group_id=:group_id";
-        $stmt = Db::getInstance()->prepare($sql);
-        foreach ($addRemovedUsers as $rUser) {
-            $stmt->execute(
-                array(
-                    ':user_id' => $rUser,
-                    ':group_id' => $gid,
                 )
             );
             $added++;
@@ -436,7 +418,7 @@ class Group
             return json_encode($response, JSON_NUMERIC_CHECK);
         }
 
-        // error_log("Trying to delete {$dUid} in group {$gid}");
+        error_log("Trying to delete {$dUid} in group {$gid}");
 
         //$uidList = implode(',', $body->user_ids);
         $uidList = $dUid;
@@ -1019,7 +1001,7 @@ class Group
 
     private function getGroupUserIds($gid)
     {
-        $sql = "SELECT user_id FROM users_groups WHERE group_id = :group_id AND removed = 0";
+        $sql = "SELECT user_id FROM users_groups WHERE group_id = :group_id";
         $stmt = Db::getInstance()->prepare($sql);
         $stmt->execute(
             array(
@@ -1030,18 +1012,6 @@ class Group
         return $result;
     }
 
-    private function getGroupRemovedUserIds($gid)
-    {
-        $sql = "SELECT user_id FROM users_groups WHERE group_id = :group_id AND removed = 1";
-        $stmt = Db::getInstance()->prepare($sql);
-        $stmt->execute(
-            array(
-                ':group_id' => $gid
-            )
-        );
-        $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-        return $result;
-    }
 
 
     private function aasort (&$array, $key, $descending = false) {

@@ -229,14 +229,14 @@ $app->post('/group/{gid}/expenses', function ($request, $response, $args) {
 //    error_log( $request->getBody());
 //    error_log( print_r($request->getParsedBody(), 1));
 //    error_log( "TEST2");
-    $response->write($group->addExpense($args['gid'], $request->getParsedBody()));
+    $response->write($group->addExpense($args['gid'], $request->getParsedBody(), \Middleware\Authenticate::$requestUid));
     $newResponse = $response->withHeader('Content-type', 'application/json');
     return $newResponse;
 })->add($auth);
 
 $app->put('/group/{gid}/expenses', function ($request, $response, $args) {
     $group = new \Models\Group();
-    $response->write($group->updateExpense($args['gid'], $request->getParsedBody()));
+    $response->write($group->updateExpense($args['gid'], $request->getParsedBody(), \Middleware\Authenticate::$requestUid));
     $newResponse = $response->withHeader('Content-type', 'application/json');
     return $newResponse;
 })->add($auth);

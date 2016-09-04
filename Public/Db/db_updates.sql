@@ -33,6 +33,7 @@ CREATE TABLE `expenses_del` (
   `event_id` INT(11) NOT NULL DEFAULT '0',
   `deposit_id` INT(11) NULL DEFAULT NULL,
   `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` INT(11) NOT NULL,
   `currency` INT(11) NOT NULL,
   `timezoneoffset` SMALLINT(6) NOT NULL DEFAULT '0',
   `delete_date` DATETIME NOT NULL,
@@ -88,6 +89,7 @@ CREATE TABLE `categories` (
 # Add cid to expenses table
 ALTER TABLE `expenses` ADD COLUMN `cid` INT(11) NOT NULL AFTER `type`;
 
+ALTER TABLE `expenses`  ADD COLUMN `updated_by` INT(11) NOT NULL AFTER `timestamp`;
 
 # Copy existing expense types over as categories
 
