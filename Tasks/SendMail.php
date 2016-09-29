@@ -40,13 +40,17 @@ function SendEmail(){
         try {
             $mail = new SendGrid\Mail();
 
+            $footer = '<br /><br /><small><a href="https://going-dutch.eu">Going Dutch beta Sept 2016</a></small>';
+            $email['message'] .= $footer;
             $text = Html2Text\Html2Text::convert($email['message']);
+
+
 
             $mail->addTo($email['toaddress'])->
             //addTo('dude@bar.com')->
             setFrom('going-dutch@mail.going-dutch.eu')->
             setFromName('Going Dutch')->
-            setSubject($email['subject'] . ' [TEST]')->
+            setSubject($email['subject'])->
             setText($text)->
             setHtml($email['message']);
             $sendgrid->send($mail);
